@@ -60,9 +60,13 @@ Usage
 
 Once the bot is deployed, you can interact with it through any channel you have integrated (e.g., a test console, a website, or a messaging platform like Slack or Facebook Messenger).
 Here are some example phrases you can use:
+
 "I want to request a leave."
+
 "What is my leave balance?"
+
 "Tell me about the sick leave policy."
+
 "Check my PTO balance"
 
 Contact
