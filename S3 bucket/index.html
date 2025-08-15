@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kendra Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Amazon Kendra Search</h1>
+        <p class="text-gray-600 mb-6 text-center">Enter a query to search your Kendra index.</p>
+
+        <div class="mb-4 flex items-center">
+            <input type="text" id="searchInput" class="flex-grow p-3 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your query...">
+            <button id="searchButton" class="bg-blue-600 text-white p-3 rounded-r-md hover:bg-blue-700 transition-colors duration-200">Search</button>
+        </div>
+
+        <div id="loadingIndicator" class="hidden text-center my-4 text-blue-600">
+            <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="font-medium">Searching...</span>
+        </div>
+
+        <div id="resultsContainer" class="space-y-4 mt-6">
+            <!-- Search results will be rendered here -->
+        </div>
+
+        <div id="errorBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-6" role="alert">
+            <strong class="font-bold">Error!</strong>
+            <span class="block sm:inline" id="errorMessage">Something went wrong.</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const searchButton = document.getElementById('searchButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const errorBox = document.getElementById('errorBox');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Function to perform the search
+            const performSearch = async () => {
+                const query = searchInput.value.trim();
+                if (query === '') {
+                    return;
+                }
+
+                resultsContainer.innerHTML = '';
+                errorBox.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden');
+
+                try {
+                    // Connect to Real Backend
+                    const response = await performBackendQuery(query);
+                    
+                    loadingIndicator.classList.add('hidden');
+
+                    if (response.ResultItems && response.ResultItems.length > 0) {
+                        response.ResultItems.forEach(item => {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm';
+                            
+                            // Check for document title and URL
+                            let title = 'Untitled Document';
+                            let url = '#';
+                            if (item.DocumentTitle && item.DocumentTitle.Text) {
+                                title = item.DocumentTitle.Text;
+                            }
+                            if (item.DocumentURI) {
+                                url = item.DocumentURI;
+                            }
+
+                            // Create the title link
+                            const titleLink = document.createElement('a');
+                            titleLink.href = url;
+                            titleLink.target = '_blank';
+                            titleLink.className = 'text-lg font-semibold text-blue-600 hover:underline';
+                            titleLink.textContent = title;
+                            resultDiv.appendChild(titleLink);
+
+                            // Check for document excerpt
+                            if (item.DocumentExcerpt && item.DocumentExcerpt.Text) {
+                                const excerptPara = document.createElement('p');
+                                excerptPara.className = 'text-gray-700 mt-2';
+                                excerptPara.textContent = item.DocumentExcerpt.Text;
+                                resultDiv.appendChild(excerptPara);
+                            }
+
+                            resultsContainer.appendChild(resultDiv);
+                        });
+                    } else {
+                        resultsContainer.innerHTML = '<p class="text-center text-gray-500">No results found for your query.</p>';
+                    }
+
+                } catch (error) {
+                    loadingIndicator.classList.add('hidden');
+                    console.error('Search error:', error);
+                    errorMessage.textContent = 'An error occurred while searching. Please try again later.';
+                    errorBox.classList.remove('hidden');
+                }
+            };
+            
+            // --- Connect to Real Backend ---
+            // This function sends the search query to your running Python backend.
+            async function performBackendQuery(query) {
+                const response = await fetch('http://127.0.0.1:5000/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            }
+            // --- End of Real Backend Call ---
+
+
+            // Event listeners
+            searchButton.addEventListener('click', performSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
