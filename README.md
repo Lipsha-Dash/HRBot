@@ -1,7 +1,7 @@
 HR Bot
 
 
-Introduction
+
 This project is a serverless HR chatbot designed to streamline common employee requests and inquiries. Built on the AWS Lex platform, the bot uses natural language processing (NLP) to automate interactions for tasks such as submitting leave requests, checking vacation balances, and retrieving company policy information.
 The primary goal of this bot is to improve operational efficiency by offloading repetitive questions from human HR staff, allowing them to focus on more complex tasks. The bot's logic is powered by AWS Lambda, which securely processes and responds to user intents.
 
